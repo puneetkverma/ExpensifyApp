@@ -24,7 +24,12 @@ class YetAnotherSlider extends Component {
       touchDown: false,
       touchIdentifier: null,
       x: null,
+      changeX: null,
+      low: this.props.low,
+      high: this.props.high
     };
+    this.right = 0; 
+    this.left = 0;
   }
   componentDidMount() {
     const leftRailThumb = document.getElementById('rootRailThumbLeft');
@@ -34,10 +39,10 @@ class YetAnotherSlider extends Component {
     // leftRailThumb.addEventListener('mouseout', this.handleMouseUp, false);
     // leftRailThumb.addEventListener('mousemove', this.handleLowMouseMove, false);
 
-    rightRailThumb.addEventListener('mouseup', this.handleMouseUp, true);
-    rightRailThumb.addEventListener('mousedown', this.handleMouseDown, true);
-    // rightRailThumb.addEventListener('mouseout', this.handleMouseUp, true);
-    rightRailThumb.addEventListener('mousemove', this.handleHighMouseMove, true);
+    rightRailThumb.addEventListener('mouseup', this.handleMouseUp, false);
+    rightRailThumb.addEventListener('mousedown', this.handleMouseDown, false);
+    // rightRailThumb.addEventListener('mouseout', this.handleMouseUp, false);
+    rightRailThumb.addEventListener('mousemove', this.handleHighMouseMove, false);
 
   }
 
@@ -66,18 +71,19 @@ class YetAnotherSlider extends Component {
       touchDown: false,
       touchIdentifier: null,
       x: screenX,
+      changeX: 0
     });
     // document.getElementById('rootRailThumbRight').addEventListener('mousemove', this.handleHighMouseMove, true);
   }
-  handleMouseUp({ screenX }) {
-    console.log('UP-->', screenX);
-    const { touchDown } = this.state;
+  handleMouseUp() {
+    const { touchDown, x, changeX } = this.state;
+    console.log('UP-->', x);
     if (touchDown) return;
-    // const { high, increment, low, max, min, onChange } = this.props;
-    // onChange({
-    //   high: Math.min(screenX, max),
-    //   low,
-    // });
+    const { high, increment, low, max, min, onChange } = this.props;
+    onChange({
+      high: Math.min(high + changeX, max),
+      low,
+    });
     this.resetThumb();
   }
   // handleLowMouseMove({ screenX }) {
@@ -98,14 +104,22 @@ class YetAnotherSlider extends Component {
     console.log('MOVE-->', screenX, "x: ", x);
     if (touchDown) return;
     if (!mouseDown) return;
-    if (screenX > x) {
-      // this.resetThumb();
-      this.incrementHighValue(screenX - x);
-    }
-    if (screenX < x) {
-      this.resetThumb();
-      this.decrementHighValue();
-    }
+    const { high, increment, max, min, onChange, low } = this.props;
+    // if (screenX > x) {
+    //   // this.resetThumb();
+    //   this.setState({
+    //     changeX: screenX - x
+    //   });
+    //   this.incrementHighValue(screenX - x);
+    // }
+    // if (screenX < x) {
+    //   this.resetThumb();
+    //   this.decrementHighValue();
+    // }
+    this.setState({
+      changeX: screenX - x
+    });
+    document.getElementById('rootRailThumbRight').style.left = `${(((Math.min(high + screenX - x, max) - min) / (max - min)) * 100)}%`
   }
   handleTouchStart({ touches }) {
     const { mouseDown } = this.state;
@@ -127,7 +141,7 @@ class YetAnotherSlider extends Component {
       const { identifier, screenX } = changedTouches[i];
       if (identifier === touchIdentifier) {
         if (screenX > x) {
-          // this.resetThumb();
+          this.resetThumb();
           this.incrementLowValue();
         }
         if (screenX < x) {
@@ -286,6 +300,10 @@ class YetAnotherSlider extends Component {
               backgroundColor: thumbColor,
             }}
           />
+        </div>
+        <div>
+            <input value={this.state.low}/>
+            <input value={this.state.high}/>
         </div>
       </div>
     );
